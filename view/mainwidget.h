@@ -2,7 +2,8 @@
 #define MAINWIDGET_H
 
 #include <QWidget>
-#include "model/timetablemanager.h"
+#include "../model/timetablemanager.h"
+#include "studentslist.h"
 
 
 QT_BEGIN_NAMESPACE
@@ -21,6 +22,6 @@ public:
 
 private:
     Ui::MainWidget *ui;
-    TimetableManager ttmng;
+    std::shared_ptr<TimetableManager> ttmng;
 };
 #endif // MAINWIDGET_H

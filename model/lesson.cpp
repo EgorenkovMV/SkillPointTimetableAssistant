@@ -6,7 +6,11 @@ ParticipantInfo::ParticipantInfo(const std::shared_ptr<Student> &student, Ruble 
     : student(student)
     , individualCost(individualCost)
     , outcome(outcome)
-{}
+{
+    if (!student) {
+        qWarning("ParticipantInfo::ParticipantInfo: student is nullptr");
+    }
+}
 
 QJsonObject ParticipantInfo::toJson() const
 {

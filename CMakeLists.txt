@@ -14,9 +14,7 @@ find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
 set(PROJECT_SOURCES
         main.cpp
-        mainwidget.cpp
-        mainwidget.h
-        mainwidget.ui
+        view/mainwidget.cpp view/mainwidget.h view/mainwidget.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
@@ -27,6 +25,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         model/lesson.h model/lesson.cpp
         model/timetablemanager.h model/timetablemanager.cpp
         model/group.h model/group.cpp
+        view/studentslist.h view/studentslist.cpp view/studentslist.ui
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET SkillPointTimetableAssistant APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
