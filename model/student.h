@@ -5,23 +5,29 @@
 #include <vector>
 #include <QString>
 #include <QMap>
-#include "lesson.h"
+#include <QDateTime>
+#include <QJsonObject>
 
+
+typedef int Ruble;
+typedef int Minute;
+
+class Lesson;
 
 class Student
 {
 public:
-    QString name;
-    std::vector<std::shared_ptr<Lesson>> lessons;
+    QString name;    // name is the key and have to be unique
     Ruble grossPayments;
     QMap<QDateTime, Ruble> paymentsHistory;
+    QString educationalPlan;
+    QString educationalPlanProgress;
 
     Student(const QString &name);
-    Student(const QJsonObject &json);
     void addPayment(Ruble payment, const QDateTime &date = QDateTime::currentDateTime());
-    void addLesson(const std::shared_ptr<Lesson> &lesson);
-    Ruble getPaymentResidue() const;
     QJsonObject toJson() const;
+    static Student fromJson(const QJsonObject &json);
+
 
 };
 

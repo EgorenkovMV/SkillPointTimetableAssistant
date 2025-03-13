@@ -1,6 +1,8 @@
 #ifndef TIMETABLEMANAGER_H
 #define TIMETABLEMANAGER_H
 
+#include <QMap>
+#include <QString>
 #include "student.h"
 #include "lesson.h"
 
@@ -11,7 +13,8 @@ public:
         Json,
         Binary
     };
-    std::vector<Student> students;
+    QMap<QString, std::shared_ptr<Student>> students;
+    std::vector<std::shared_ptr<Lesson>> lessons;
 
     TimetableManager();
     bool save(SaveFormat saveFormat = SaveFormat::Json);

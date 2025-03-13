@@ -7,10 +7,10 @@ MainWidget::MainWidget(QWidget *parent)
 {
     ui->setupUi(this);
     ttmng.load();
-    QString loadReport {"Students:\n"};
-    for (const Student &student : ttmng.students) {
-        loadReport.append(student.name + '\n');
-        loadReport.append(QString::number(student.grossPayments) + '\n');
+    QString loadReport {"Lessons:\n"};
+    for (const std::shared_ptr<Lesson> &lesson : ttmng.lessons) {
+        loadReport.append(lesson->participants[0]->student->name + '\n');
+        loadReport.append(QString::number(lesson->cost) + '\n');
     }
 
     ui->pte_students->setPlainText(loadReport);

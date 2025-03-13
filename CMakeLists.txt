@@ -26,6 +26,7 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         model/student.h model/student.cpp
         model/lesson.h model/lesson.cpp
         model/timetablemanager.h model/timetablemanager.cpp
+        model/group.h model/group.cpp
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET SkillPointTimetableAssistant APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
