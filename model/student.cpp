@@ -20,6 +20,7 @@ QJsonObject Student::toJson() const
     json["grossPayments"] = grossPayments;
     json["educationalPlan"] = educationalPlan;
     json["educationalPlanProgress"] = educationalPlanProgress;
+    json["isArchived"] = isArchived;
 
     QJsonArray jsonPayments;
     QMap<QDateTime, Ruble>::const_iterator it = paymentsHistory.constBegin();
@@ -43,6 +44,7 @@ Student Student::fromJson(const QJsonObject &json)
     student.grossPayments = json.value("grossPayments").toInt();
     student.educationalPlan = json.value("educationalPlan").toString();
     student.educationalPlanProgress = json.value("educationalPlanProgress").toString();
+    student.isArchived = json.value("isArchived").toBool(false);
 
     for (const QJsonValue &paymentRecord : json.value("paymentsHistory").toArray()) {
         student.paymentsHistory.insert(QDateTime::fromString(paymentRecord.toObject().value("date").toString()),

@@ -19,6 +19,7 @@ public:
     TimetableManager();
     bool save(SaveFormat saveFormat = SaveFormat::Json);
     bool load(SaveFormat saveFormat = SaveFormat::Json);
+    bool addStudent(const std::shared_ptr<Student> &newStudent);
 
 
 };

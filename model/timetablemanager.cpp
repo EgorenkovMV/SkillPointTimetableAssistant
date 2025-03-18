@@ -107,6 +107,7 @@ bool TimetableManager::load(SaveFormat saveFormat)
         return false;
     }
 
+    // Loading students
     if (loadDoc.object()["students"] == QJsonValue::Null or not loadDoc.object()["students"].isArray()) {
         qWarning("TimetableManager::load: students field is malformed.");
         return false;
@@ -118,10 +119,10 @@ bool TimetableManager::load(SaveFormat saveFormat)
             return false;
         }
         Student studentObj = Student::fromJson(student.toObject());
-        students.insert(studentObj.name, std::make_shared<Student>(studentObj));
+        addStudent(std::make_shared<Student>(studentObj));
     }
 
-
+    // Loading lessons
     // Must load students before lessons to fill participants in latter
     if (loadDoc.object()["lessons"] == QJsonValue::Null or not loadDoc.object()["lessons"].isArray()) {
         qWarning("TimetableManager::load: lessons field is malformed.");
@@ -137,6 +138,17 @@ bool TimetableManager::load(SaveFormat saveFormat)
         lessons.push_back(std::make_shared<Lesson>(lessonObj));
     }
 
+    return true;
+}
+
+bool TimetableManager::addStudent(const std::shared_ptr<Student> &newStudent)
+{
+    if (students.count(newStudent->name)) {
+        qWarning("TimetableManager::addStudent: unable to add student - name is not unique");
+        return false;
+    }
+
+    students.insert(newStudent->name, newStudent);
     return true;
 }
 

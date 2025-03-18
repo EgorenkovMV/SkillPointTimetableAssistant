@@ -1,8 +1,6 @@
 #ifndef STUDENT_H
 #define STUDENT_H
 
-#include <memory>
-#include <vector>
 #include <QString>
 #include <QMap>
 #include <QDateTime>
@@ -22,6 +20,7 @@ public:
     QMap<QDateTime, Ruble> paymentsHistory;
     QString educationalPlan;
     QString educationalPlanProgress;
+    bool isArchived = false;
 
     Student(const QString &name);
     void addPayment(Ruble payment, const QDateTime &date = QDateTime::currentDateTime());
