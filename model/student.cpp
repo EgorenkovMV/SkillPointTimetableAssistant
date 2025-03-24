@@ -2,14 +2,39 @@
 #include <QJsonArray>
 
 
+QJsonObject ContactData::toJson() const
+{
+    QJsonObject json;
+    json["name"] = name;
+    json["phoneNumber"] = phoneNumber;
+
+    return json;
+}
+
+ContactData ContactData::fromJson(const QJsonObject &json)
+{
+    ContactData contactData {""};
+    contactData.name = json.value("name").toString();
+    contactData.phoneNumber = json.value("phoneNumber").toString();
+
+    return contactData;
+}
+
+
+
 Student::Student(const QString &name)
     : name(name)
-    , grossPayments(0)
+    , cachedBalance(0)
 {}
+
+Ruble Student::paymentBalance() const
+{
+    return cachedBalance;
+}
 
 void Student::addPayment(Ruble payment, const QDateTime &date)
 {
-    grossPayments += payment;
+    cachedBalance += payment;
     paymentsHistory.insert(date, payment);
 }
 
@@ -17,7 +42,7 @@ QJsonObject Student::toJson() const
 {
     QJsonObject json;
     json["name"] = name;
-    json["grossPayments"] = grossPayments;
+    json["cachedBalance"] = cachedBalance;
     json["educationalPlan"] = educationalPlan;
     json["educationalPlanProgress"] = educationalPlanProgress;
     json["isArchived"] = isArchived;
@@ -34,6 +59,13 @@ QJsonObject Student::toJson() const
 
     json["paymentsHistory"] = jsonPayments;
 
+    QJsonArray jsonContacts;
+    for (const ContactData &contact : contactData) {
+        jsonContacts.append(contact.toJson());
+    }
+    json["contactData"] = jsonContacts;
+
+
     return json;
 }
 
@@ -41,7 +73,7 @@ Student Student::fromJson(const QJsonObject &json)
 {
     Student student {""};
     student.name = json.value("name").toString();
-    student.grossPayments = json.value("grossPayments").toInt();
+    student.cachedBalance = json.value("cachedBalance").toInt();
     student.educationalPlan = json.value("educationalPlan").toString();
     student.educationalPlanProgress = json.value("educationalPlanProgress").toString();
     student.isArchived = json.value("isArchived").toBool(false);
@@ -50,6 +82,11 @@ Student Student::fromJson(const QJsonObject &json)
         student.paymentsHistory.insert(QDateTime::fromString(paymentRecord.toObject().value("date").toString()),
                                        paymentRecord.toObject().value("payment").toInt());
     }
+
+    for (const QJsonValue &contacRecord : json.value("contactData").toArray()) {
+        student.contactData.push_back(ContactData::fromJson(contacRecord.toObject()));
+    }
+
     return student;
 }
 

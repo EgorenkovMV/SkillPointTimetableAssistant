@@ -1,5 +1,6 @@
 #include "studentinfo.h"
 #include "ui_studentinfo.h"
+#include <QCalendarWidget>
 
 StudentInfo::StudentInfo(QWidget *parent)
     : QWidget(parent)
@@ -11,20 +12,43 @@ StudentInfo::StudentInfo(QWidget *parent)
     saveDialog->setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
     saveDialog->setText("Сохранить изменения?");
     saveDialog->setWindowTitle("Сохранить изменения?");
+    saveDialog->setIcon(QMessageBox::Question);
     saveDialog->setModal(true);
-    saveDialog->done(-1);
 
     discardDialog = new QMessageBox(this);
     discardDialog->setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
     discardDialog->setText("Отменить изменение данных этого ученика?");
     discardDialog->setWindowTitle("Отменить изменение?");
+    discardDialog->setIcon(QMessageBox::Question);
     discardDialog->setModal(true);
-    discardDialog->done(-1);
 
-    paymentDialog = new QDialog(this);
+    paymentDialog = new QMessageBox(this);
+    paymentDialog->setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+    paymentDialog->setText("Введите сумму и дату");
+    paymentDialog->setWindowTitle("Создайте запись о внесении оплаты");
+
+    QGridLayout *dialogLayout = dynamic_cast<QGridLayout *>(paymentDialog->layout());
+
+    paymentDialogDateEdit = new QDateTimeEdit();
+    paymentDialogDateEdit->setCalendarPopup(true);
+    paymentDialogDateEdit->calendarWidget()->setFirstDayOfWeek(Qt::DayOfWeek::Monday);
+    paymentDialogDateEdit->calendarWidget()->setGridVisible(true);
+    paymentDialogDateEdit->setDateTime(QDateTime::currentDateTime());
+
+    paymentDialogSpinBox = new QSpinBox();
+    paymentDialogSpinBox->setMaximum(999999);
+    paymentDialogSpinBox->setSingleStep(50);
+    paymentDialogSpinBox->setSuffix(" руб.");
+    if (dialogLayout) {
+        dialogLayout->addWidget(paymentDialogDateEdit, 1, 1);
+        dialogLayout->addWidget(paymentDialogSpinBox, 1, 2);
+    }
+    else {
+        paymentDialog->layout()->addWidget(paymentDialogDateEdit);
+        paymentDialog->layout()->addWidget(paymentDialogSpinBox);
+    }
+
     paymentDialog->setModal(true);
-    paymentDialog->done(-1);
-
 
     connect(ui->pb_editStudent, &QPushButton::clicked, this, &StudentInfo::startEditing);
     connect(ui->pb_save, &QPushButton::clicked, this, &StudentInfo::saveClicked);
@@ -33,8 +57,18 @@ StudentInfo::StudentInfo(QWidget *parent)
 
     connect(saveDialog, &QDialog::accepted, this, &StudentInfo::stopEditingAndSave);
     connect(discardDialog, &QDialog::accepted, this, &StudentInfo::stopEditingAndDiscard);
+    connect(paymentDialog, &QDialog::accepted, this, &StudentInfo::addPayment);
 
-    // connect(ui->pb_addPayment, &QPushButton::clicked, this, &StudentInfo::addPayment);
+    ui->tw_contactData->setRowCount(1);
+    ui->tw_contactData->setColumnCount(2);
+    ui->tw_contactData->setHorizontalHeaderLabels({"Контактное лицо", "Номер телефона"});
+    ui->tw_contactData->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui->tw_contactData->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    connect(ui->tw_contactData->model(), &QAbstractItemModel::dataChanged, this, [this] (const QModelIndex &index) {
+        if (index.row() == ui->tw_contactData->rowCount() - 1) {
+            ui->tw_contactData->insertRow(ui->tw_contactData->rowCount());
+        }
+    });
 
     stopEditingAndDiscard();
 }
@@ -55,7 +89,7 @@ void StudentInfo::setStudent(const std::shared_ptr<Student> &student)
     ui->le_name->setText(currStudent->name);
     ui->le_educationalPlan->setText(currStudent->educationalPlan);
     ui->le_educationalPlanProgress->setText(currStudent->educationalPlanProgress);
-    ui->sb_grossPayment->setValue(currStudent->grossPayments);
+    ui->sb_grossPayment->setValue(currStudent->paymentBalance());
 
     ui->tw_paymentHistory->clear();
     ui->tw_paymentHistory->setRowCount(currStudent->paymentsHistory.size());
@@ -73,6 +107,30 @@ void StudentInfo::setStudent(const std::shared_ptr<Student> &student)
     }
     ui->tw_paymentHistory->setEditTriggers(QAbstractItemView::NoEditTriggers);
     ui->tw_paymentHistory->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+
+
+    ui->tw_contactData->clear();
+    ui->tw_contactData->setRowCount(currStudent->contactData.size() + 1);
+    ui->tw_contactData->setColumnCount(2);
+    ui->tw_contactData->setHorizontalHeaderLabels({"Контактное лицо", "Номер телефона"});
+    rowCount = 0;
+    for (const ContactData &contact : currStudent->contactData) {
+        QTableWidgetItem *contactName = new QTableWidgetItem(contact.name);
+        QTableWidgetItem *contactPhone = new QTableWidgetItem(contact.phoneNumber);
+        ui->tw_contactData->setItem(rowCount, 0, contactName);
+        ui->tw_contactData->setItem(rowCount, 1, contactPhone);
+        ++rowCount;
+    }
+    ui->tw_contactData->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui->tw_contactData->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+
+}
+
+void StudentInfo::responseToStudentDeletion(const std::shared_ptr<Student> &student)
+{
+    if (student == currStudent) {
+        setStudent(nullptr);
+    }
 }
 
 void StudentInfo::startEditing()
@@ -81,6 +139,7 @@ void StudentInfo::startEditing()
     ui->le_educationalPlan->setReadOnly(false);
     ui->le_educationalPlanProgress->setReadOnly(false);
     ui->sb_grossPayment->setReadOnly(false);
+    ui->tw_contactData->setEditTriggers(QAbstractItemView::AllEditTriggers);
 
     ui->pb_editStudent->setDisabled(true);
     ui->pb_save->setDisabled(false);
@@ -113,7 +172,9 @@ void StudentInfo::discardClicked()
 
 void StudentInfo::addPaymentClicked()
 {
-
+    if (currStudent) {
+        paymentDialog->open();
+    }
 }
 
 void StudentInfo::stopEditingAndSave()
@@ -122,6 +183,7 @@ void StudentInfo::stopEditingAndSave()
     ui->le_educationalPlan->setReadOnly(true);
     ui->le_educationalPlanProgress->setReadOnly(true);
     ui->sb_grossPayment->setReadOnly(true);
+    ui->tw_contactData->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     ui->pb_editStudent->setDisabled(false);
     ui->pb_save->setDisabled(true);
@@ -135,8 +197,30 @@ void StudentInfo::stopEditingAndSave()
 
     if (currStudent) {
         if (ui->le_name->text() == currStudent->name) {
+            if (ui->sb_grossPayment->value() - currStudent->paymentBalance()) {
+                currStudent->addPayment(ui->sb_grossPayment->value() - currStudent->paymentBalance());
+            }
             currStudent->educationalPlan = ui->le_educationalPlan->text();
             currStudent->educationalPlanProgress = ui->le_educationalPlanProgress->text();
+
+            currStudent->contactData.clear();
+            for (int row = 0; row < ui->tw_contactData->rowCount(); ++row) {
+                QTableWidgetItem *nameItem = ui->tw_contactData->item(row, 0);
+                QTableWidgetItem *phoneItem = ui->tw_contactData->item(row, 1);
+
+                if (!nameItem or !phoneItem) continue;
+
+                QString name = nameItem->data(Qt::EditRole).toString();   // DisplayRole / EditRole
+                QString phone = phoneItem->data(Qt::EditRole).toString();
+                if (!phone.isEmpty()) {
+                    if (name.isEmpty()) {
+                        name = currStudent->name;
+                    }
+                    currStudent->contactData.push_back({name, phone});
+                }
+            }
+
+            setStudent(currStudent);
             return;
         }
     }
@@ -145,6 +229,22 @@ void StudentInfo::stopEditingAndSave()
     newStudent->addPayment(ui->sb_grossPayment->value());
     newStudent->educationalPlan = ui->le_educationalPlan->text();
     newStudent->educationalPlanProgress = ui->le_educationalPlanProgress->text();
+
+    for (int row = 0; row < ui->tw_contactData->rowCount(); ++row) {
+        QTableWidgetItem *nameItem = ui->tw_contactData->item(row, 0);
+        QTableWidgetItem *phoneItem = ui->tw_contactData->item(row, 1);
+
+        if (!nameItem or !phoneItem) continue;
+
+        QString name = nameItem->data(Qt::EditRole).toString();   // DisplayRole / EditRole
+        QString phone = phoneItem->data(Qt::EditRole).toString();
+        if (!phone.isEmpty()) {
+            if (name.isEmpty()) {
+                name = currStudent->name;
+            }
+            newStudent->contactData.push_back({name, phone});
+        }
+    }
 
     setStudent(std::shared_ptr<Student>(newStudent));
     emit studentCreated(currStudent);
@@ -157,6 +257,7 @@ void StudentInfo::stopEditingAndDiscard()
     ui->le_educationalPlan->setReadOnly(true);
     ui->le_educationalPlanProgress->setReadOnly(true);
     ui->sb_grossPayment->setReadOnly(true);
+    ui->tw_contactData->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
     ui->pb_editStudent->setDisabled(false);
     ui->pb_save->setDisabled(true);
@@ -170,7 +271,12 @@ void StudentInfo::stopEditingAndDiscard()
 
 void StudentInfo::addPayment()
 {
-    currStudent->addPayment(0);
+    if (!currStudent or paymentDialogSpinBox->value() == 0) {
+        return;
+    }
+    currStudent->addPayment(paymentDialogSpinBox->value(), paymentDialogDateEdit->dateTime());
+
+    setStudent(currStudent);
 }
 
 

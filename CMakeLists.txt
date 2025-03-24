@@ -17,17 +17,18 @@ set(PROJECT_SOURCES
         model/student.h model/student.cpp
         model/lesson.h model/lesson.cpp
         model/timetablemanager.h model/timetablemanager.cpp
-        model/group.h model/group.cpp
+
         view/mainwidget.cpp view/mainwidget.h view/mainwidget.ui
-        view/studentslist.h view/studentslist.cpp view/studentslist.ui
+        view/studentslist.h view/studentslist.cpp
         view/studentinfo.h view/studentinfo.cpp view/studentinfo.ui
+        view/timetablewidget.h view/timetablewidget.cpp
+        view/daytimetableinfo.h view/daytimetableinfo.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(SkillPointTimetableAssistant
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET SkillPointTimetableAssistant APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

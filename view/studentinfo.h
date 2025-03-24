@@ -3,6 +3,8 @@
 
 #include <QWidget>
 #include <QMessageBox>
+#include <QTimeEdit>
+#include <QSpinBox>
 #include "../model/student.h"
 
 
@@ -23,6 +25,9 @@ signals:
     void studentCreated(const std::shared_ptr<Student> &student);
     void paymentAdded(const std::shared_ptr<Student> &student);
 
+public slots:
+    void responseToStudentDeletion(const std::shared_ptr<Student> &student);
+
 private slots:
     void startEditing();
 
@@ -40,7 +45,9 @@ private:
     bool isEditable = false;
     QMessageBox *saveDialog = nullptr;
     QMessageBox *discardDialog = nullptr;
-    QDialog *paymentDialog = nullptr;
+    QMessageBox *paymentDialog = nullptr;
+    QDateTimeEdit *paymentDialogDateEdit = nullptr;
+    QSpinBox *paymentDialogSpinBox = nullptr;
 
 
 };

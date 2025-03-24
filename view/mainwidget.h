@@ -3,7 +3,6 @@
 
 #include <QWidget>
 #include "../model/timetablemanager.h"
-#include "studentslist.h"
 
 
 QT_BEGIN_NAMESPACE

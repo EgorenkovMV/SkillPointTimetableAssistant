@@ -1,5 +1,8 @@
 #include "mainwidget.h"
 #include "./ui_mainwidget.h"
+#include "studentslist.h"
+#include "timetablewidget.h"
+
 
 MainWidget::MainWidget(QWidget *parent)
     : QWidget(parent)
@@ -9,9 +12,9 @@ MainWidget::MainWidget(QWidget *parent)
     ttmng = std::shared_ptr<TimetableManager> {new TimetableManager {}};
     ttmng->load();
 
-    ui->tabWidget->addTab(new QWidget(this), tr("Расписание"));    // Not implemented yet
-    ui->tabWidget->addTab(new StudentsList(this, ttmng), tr("Ученики"));
-    ui->tabWidget->setCurrentIndex(1);
+    ui->tabWidget->addTab(new TimetableWidget(this, ttmng), "Расписание");
+    ui->tabWidget->addTab(new StudentsList(this, ttmng), "Ученики");
+    setWindowTitle("SkillPoint Timetable Assistant");
 }
 
 MainWidget::~MainWidget()

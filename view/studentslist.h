@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QFrame>
 #include <QPushButton>
+#include <QMessageBox>
 #include "../model/timetablemanager.h"
 #include "studentinfo.h"
 
@@ -21,21 +22,21 @@ public:
 
 signals:
     void selected(StudentsListItem *item);
+    void archived(const std::shared_ptr<Student> &student);
+
+private slots:
+    void removeButtonClicked();
+    void removalConfirmed();
 
 private:
     QPushButton *pb_removeStudent;
     bool isSelected = false;
+    QMessageBox *removeConfirmDialog = nullptr;
 
     void mouseMoveEvent(QMouseEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
 
 };
-
-
-
-namespace Ui {
-class StudentsList;
-}
 
 class StudentsList : public QWidget
 {
@@ -47,10 +48,10 @@ public:
     void updateList();
 
 private:
-    Ui::StudentsList *ui;
     std::shared_ptr<TimetableManager> ttmng;
     QWidget *wiInsideScrollArea;
     std::vector<StudentsListItem *> itemWidgets;
+    StudentInfo *si_studentInfo;
 
     void handleSelect(StudentsListItem *item);
 };

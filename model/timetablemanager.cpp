@@ -44,7 +44,7 @@ TimetableManager::TimetableManager()
     // lessons.push_back(std::shared_ptr<Lesson> {l1});
 
 
-    // Lesson *l2 = new Lesson{QDateTime {QDate {2025, 2, 15}, QTime {14, 00}}, 90, Lesson::Type::EnglishIndividual, 1800};
+    // Lesson *l2 = new Lesson{QDateTime {QDate {2025, 2, 13}, QTime {19, 00}}, 90, Lesson::Type::EnglishIndividual, 1800};
 
     // ParticipantInfo *l2pi1 = new ParticipantInfo{students.value("старуха Лоухи"), 1300, ParticipantInfo::Outcome::NotFinishedYet};
     // l2->participants.push_back(std::shared_ptr<ParticipantInfo> {l2pi1});

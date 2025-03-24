@@ -1,5 +1,4 @@
 #include "studentslist.h"
-#include "ui_studentslist.h"
 #include <QScrollArea>
 #include <QVBoxLayout>
 #include <QGridLayout>
@@ -35,6 +34,13 @@ StudentsListItem::StudentsListItem(QWidget *parent, const std::shared_ptr<Studen
     setMaximumHeight(80);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
 
+    removeConfirmDialog = new QMessageBox(this);
+    removeConfirmDialog->setStandardButtons(QMessageBox::Ok | QMessageBox::Cancel);
+    removeConfirmDialog->setText("Вы действительно хотите перенести ученика в архив?");
+    removeConfirmDialog->setWindowTitle("Удалить?");
+    removeConfirmDialog->setIcon(QMessageBox::Question);
+    removeConfirmDialog->setModal(true);
+
     deselect();
 
     this->student = student;
@@ -51,11 +57,10 @@ StudentsListItem::StudentsListItem(QWidget *parent, const std::shared_ptr<Studen
                           std::min(maxSLILabelSize, (int)student->educationalPlan.size()))), 0, 1);
     layout->addWidget(new QLabel(student->educationalPlanProgress.first(
                           std::min(maxSLILabelSize, (int)student->educationalPlanProgress.size()))), 1, 1);
-    pb_removeStudent = new QPushButton("Remove student");
-    connect(pb_removeStudent, &QPushButton::clicked, this, [this] () {
-        this->student->isArchived = true;
-        this->hide();
-    });
+    pb_removeStudent = new QPushButton("Удалить ученика");
+    connect(pb_removeStudent, &QPushButton::clicked, this, &StudentsListItem::removeButtonClicked);
+    connect(removeConfirmDialog, &QDialog::accepted, this, &StudentsListItem::removalConfirmed);
+
     layout->addWidget(pb_removeStudent, 1, 0);
 
     setMouseTracking(true);
@@ -68,7 +73,7 @@ void StudentsListItem::select()
     setStyleSheet("StudentsListItem {\
                    border-width: 2px;\
                    border-style: solid; \
-                   border-color: rgba(30, 30, 180, 45%); }");
+                   border-color: rgba(28, 73, 255, 0.79); }");
 }
 
 void StudentsListItem::deselect()
@@ -79,6 +84,18 @@ void StudentsListItem::deselect()
                    border-width: 2px;\
                    border-style: solid; \
                    border-color: rgba(0, 0, 0, 25%); }");
+}
+
+void StudentsListItem::removeButtonClicked()
+{
+    removeConfirmDialog->open();
+}
+
+void StudentsListItem::removalConfirmed()
+{
+    student->isArchived = true;
+    hide();
+    emit archived(student);
 }
 
 void StudentsListItem::mouseMoveEvent(QMouseEvent* event)
@@ -99,32 +116,37 @@ void StudentsListItem::mousePressEvent(QMouseEvent* event)
 StudentsList::StudentsList(QWidget *parent, std::shared_ptr<TimetableManager> ttmng)
     : QWidget(parent)
     , ttmng(ttmng)
-    , ui(new Ui::StudentsList)
 {
-    ui->setupUi(this);
+    QHBoxLayout *layout = new QHBoxLayout(this);
 
     // Students list
-    QVBoxLayout *studentListLayout = new QVBoxLayout(ui->wi_studentList);
     QScrollArea *scrollArea = new QScrollArea();
-    studentListLayout->addWidget(scrollArea);
+    new QVBoxLayout(scrollArea);
+    layout->addWidget(scrollArea);
 
     wiInsideScrollArea = new QWidget();
-    new QVBoxLayout(wiInsideScrollArea);    // ???
+    new QVBoxLayout(wiInsideScrollArea);
 
     scrollArea->setWidget(wiInsideScrollArea);
     scrollArea->setWidgetResizable(true);
-    updateList();
 
-    // Student Info
-    connect(ui->si_studentInfo, &StudentInfo::studentCreated, this, [this] (const std::shared_ptr<Student> &student) {
+    // Student info
+    si_studentInfo = new StudentInfo();
+    layout->addWidget(si_studentInfo);
+
+    layout->setStretch(0, 1);
+    layout->setStretch(1, 1);
+
+    connect(si_studentInfo, &StudentInfo::studentCreated, this, [this] (const std::shared_ptr<Student> &student) {
         this->ttmng->addStudent(student);
         updateList();
     });
+
+    updateList();
 }
 
 StudentsList::~StudentsList()
 {
-    delete ui;
     ttmng->save();
 }
 
@@ -140,6 +162,7 @@ void StudentsList::updateList()
             itemWidgets.push_back(item);
             wiInsideScrollArea->layout()->addWidget(item);
             connect(item, &StudentsListItem::selected, this, &StudentsList::handleSelect);
+            connect(item, &StudentsListItem::archived, si_studentInfo, &StudentInfo::responseToStudentDeletion);
         }
         ++it;
     }
@@ -156,5 +179,5 @@ void StudentsList::handleSelect(StudentsListItem *item)
     }
     item->select();
 
-    ui->si_studentInfo->setStudent(item->student);
+    si_studentInfo->setStudent(item->student);
 };
