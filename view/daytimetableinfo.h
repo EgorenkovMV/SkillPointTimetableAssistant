@@ -6,7 +6,10 @@
 #include <QDate>
 #include <QTime>
 #include <QLayout>
+#include <QPushButton>
 #include "../model/timetablemanager.h"
+#include "lessoneditpopup.h"
+
 
 class LessonTile : public QFrame
 {
@@ -14,10 +17,15 @@ class LessonTile : public QFrame
 public:
     explicit LessonTile(QWidget *parent = nullptr, const std::shared_ptr<Lesson> &lesson = nullptr);
 
+signals:
+    void clicked(const std::shared_ptr<Lesson> &lesson);
+
 private:
     std::shared_ptr<Lesson> lesson;
     static QVector<QString> colorCycleNames;
     static int colorCycleCounter;
+
+    void mouseDoubleClickEvent(QMouseEvent* event) override;
 
 };
 
@@ -29,6 +37,9 @@ public:
 
 public slots:
     void setDay(const QDate &day);
+    void editLesson(const std::shared_ptr<Lesson> &lesson);
+    void createLesson();
+    void deleteLessonEdit();
 
 signals:
 
@@ -41,10 +52,15 @@ private:
 
     QGridLayout *mainLayout = nullptr;
 
-    void buildWidget();    // call this only if startTime or finishTime has changed
-
     QTime startTime {11, 00};
     QTime finishTime {20, 00};
+
+    LessonEditPopup *lessonEdit = nullptr;
+
+
+    void buildWidget();    // call this only if startTime or finishTime has changed
+    void mouseDoubleClickEvent(QMouseEvent* event) override;
+
 
 };
 

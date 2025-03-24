@@ -23,6 +23,7 @@ set(PROJECT_SOURCES
         view/studentinfo.h view/studentinfo.cpp view/studentinfo.ui
         view/timetablewidget.h view/timetablewidget.cpp
         view/daytimetableinfo.h view/daytimetableinfo.cpp
+        view/lessoneditpopup.h view/lessoneditpopup.cpp view/lessoneditpopup.ui
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

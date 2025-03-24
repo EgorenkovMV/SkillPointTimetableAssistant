@@ -98,13 +98,6 @@ void StudentsListItem::removalConfirmed()
     emit archived(student);
 }
 
-void StudentsListItem::mouseMoveEvent(QMouseEvent* event)
-{
-    if (isSelected) {
-        return;
-    }
-}
-
 void StudentsListItem::mousePressEvent(QMouseEvent* event)
 {
     emit selected(this);

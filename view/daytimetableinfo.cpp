@@ -1,6 +1,7 @@
 #include "daytimetableinfo.h"
 #include <QLayoutItem>
 #include <QLabel>
+#include <QMouseEvent>
 
 namespace {
 
@@ -30,8 +31,20 @@ LessonTile::LessonTile(QWidget *parent, const std::shared_ptr<Lesson> &lesson)
     : QFrame{parent}
     , lesson(lesson)
 {
+
+
     setFrameStyle(QFrame::StyledPanel);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+
+    if (!lesson) {
+        setStyleSheet("LessonTile {\
+                       border-color: rgba(0, 0, 0, 100%);\
+                       border-style: solid;\
+                       border-width: 1px; }");
+        return;
+    }
+
+
     QString color = colorCycleNames.at(colorCycleCounter % colorCycleNames.size());
     ++colorCycleCounter;
     setStyleSheet(QString("LessonTile {\
@@ -40,16 +53,25 @@ LessonTile::LessonTile(QWidget *parent, const std::shared_ptr<Lesson> &lesson)
                            border-width: 2px; }").arg(color));
 
     QVBoxLayout *layout = new QVBoxLayout(this);
+
     QString lessonName = "???";
-    if (lesson) {
-        if (!lesson->participants.empty()) {
-            lessonName = lesson->participants.at(0)->student->name;
-            if (lesson->participants.size() > 1) {
-                lessonName.append(" и др.");
-            }
+    if (!lesson->participants.empty()) {
+        lessonName = lesson->participants.at(0)->student->name;
+        if (lesson->participants.size() > 1) {
+            lessonName.append(" и др.");
         }
     }
     layout->addWidget(new QLabel(lessonName));
+}
+
+void LessonTile::mouseDoubleClickEvent(QMouseEvent* event)
+{
+    if (!lesson) {
+        event->ignore();
+        return;
+    }
+    emit clicked(lesson);
+    event->accept();
 }
 
 
@@ -67,17 +89,12 @@ void DayTimetableInfo::buildWidget()
         std::swap(startTime, finishTime);
     }
 
-    // setMinimumHeight((finishTime.hour() - startTime.hour()) * 60 / minToPixRatio +
-    //      topPadding + bottomPadding + (finishTime.hour() - startTime.hour()) * 11);
-
 
     clearLayout(layout());
 
     mainLayout = new QGridLayout(this);
     mainLayout->setVerticalSpacing(0);
-    mainLayout->setContentsMargins(QMargins {11, 1, 11, 0});
-
-    //mainLayout->addWidget(widget, int fromRow, int fromColumn, int rowSpan, int columnSpan, Qt::Alignment alignment = Qt::Alignment());
+    mainLayout->setContentsMargins(QMargins {11, 0, 11, 0});
 
     int rowCounter = 0;
     for (int hour = startTime.hour(); hour < finishTime.hour(); ++hour) {
@@ -106,7 +123,8 @@ void DayTimetableInfo::setDay(const QDate &day)
     }
 
 
-    for (int row = 0; row <= (finishTime.hour() - startTime.hour()) * 60 / minToPixRatio; ++row) {
+    // Clear the column #1 (lesson tiles)
+    for (int row = 0; row < mainLayout->rowCount(); ++row) {
         QLayoutItem *item = mainLayout->itemAtPosition(row, 1);
         if (!item) {
             continue;
@@ -119,15 +137,22 @@ void DayTimetableInfo::setDay(const QDate &day)
         }
     }
 
-
+    // Adding lesson tiles
     for (const std::shared_ptr<Lesson> &lesson : ttmng->lessons) {
         if (lesson->date.date() == currDay) {
             int offset = (float)((lesson->date.time().hour() - startTime.hour()) * 60 + lesson->date.time().minute()) / minToPixRatio;
+            if (offset < 0) {
+                qWarning("DayTimetableInfo::setDay: lesson is outside of working hours");
+                continue;
+            }
             int duration = (float)lesson->duration / minToPixRatio;
-            mainLayout->addWidget(new LessonTile(nullptr, lesson), offset, 1, duration, 1);
+            LessonTile *tile = new LessonTile(nullptr, lesson);
+            connect(tile, &LessonTile::clicked, this, &DayTimetableInfo::editLesson);
+            mainLayout->addWidget(tile, offset, 1, duration, 1);
         }
     }
 
+    // Adding blank lesson tiles
     int spacerStart = -1;
     int spacerEnd = -1;
     int row = 0;
@@ -140,25 +165,70 @@ void DayTimetableInfo::setDay(const QDate &day)
         }
         else {
             if (spacerStart != -1) {
-                mainLayout->addWidget(new QLabel(""), spacerStart, 1, spacerEnd - spacerStart + 1, 1);
+                mainLayout->addWidget(new LessonTile(nullptr, nullptr), spacerStart, 1, spacerEnd - spacerStart + 1, 1);
             }
             spacerStart = -1;
             spacerEnd = -1;
         }
     }
     if (!mainLayout->itemAtPosition(row, 1)) {
-        if (spacerStart == -1) {
-            mainLayout->addWidget(new QLabel(""), spacerStart, 1, spacerEnd - spacerStart + 1, 1);
+        if (spacerStart != -1) {
+            mainLayout->addWidget(new LessonTile(nullptr, nullptr), spacerStart, 1, spacerEnd - spacerStart + 1, 1);
         }
     }
 
+}
 
-    // mainLayout->addWidget(new LessonTile(nullptr, ttmng->lessons.at(0)), 0, 1, 20, 1);
-    // mainLayout->addWidget(new QLabel(""), 8, 1, 6, 1);
-    // mainLayout->addWidget(new LessonTile(nullptr, ttmng->lessons.at(1)), 20, 1, 12, 1);
+void DayTimetableInfo::editLesson(const std::shared_ptr<Lesson> &lesson)
+{
+    if (!lesson) {
+        qWarning("DayTimetableInfo::editLesson: no lesson to edit");
+        return;
+    }
+
+    if (lessonEdit) {
+        lessonEdit->show();
+        lessonEdit->setFocus();
+        return;
+    }
+
+    lessonEdit = new LessonEditPopup(nullptr, ttmng, lesson);
+    connect(lessonEdit, &LessonEditPopup::lessonEdited, this, &DayTimetableInfo::deleteLessonEdit);
+    connect(lessonEdit, &LessonEditPopup::lessonCreated, this, &DayTimetableInfo::deleteLessonEdit);
+    connect(lessonEdit, &LessonEditPopup::canceled, this, &DayTimetableInfo::deleteLessonEdit);
 
 }
 
+void DayTimetableInfo::createLesson()
+{
+    if (lessonEdit) {
+        lessonEdit->show();
+        lessonEdit->setFocus();
+        return;
+    }
+
+    lessonEdit = new LessonEditPopup(nullptr, ttmng, nullptr, currDay.value_or(QDate::currentDate()));
+    connect(lessonEdit, &LessonEditPopup::lessonEdited, this, &DayTimetableInfo::deleteLessonEdit);
+    connect(lessonEdit, &LessonEditPopup::lessonCreated, this, &DayTimetableInfo::deleteLessonEdit);
+    connect(lessonEdit, &LessonEditPopup::canceled, this, &DayTimetableInfo::deleteLessonEdit);
+}
+
+void DayTimetableInfo::deleteLessonEdit()
+{
+    if (currDay) {
+        setDay(currDay.value());
+    }
+
+    lessonEdit->hide();
+    lessonEdit->deleteLater();
+    lessonEdit = nullptr;
+}
+
+void DayTimetableInfo::mouseDoubleClickEvent(QMouseEvent* event)
+{
+    createLesson();
+    event->accept();
+}
 
 
 

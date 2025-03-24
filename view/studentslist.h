@@ -33,7 +33,6 @@ private:
     bool isSelected = false;
     QMessageBox *removeConfirmDialog = nullptr;
 
-    void mouseMoveEvent(QMouseEvent* event) override;
     void mousePressEvent(QMouseEvent* event) override;
 
 };

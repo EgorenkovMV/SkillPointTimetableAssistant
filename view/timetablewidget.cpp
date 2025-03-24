@@ -23,4 +23,6 @@ TimetableWidget::TimetableWidget(QWidget *parent, std::shared_ptr<TimetableManag
         this->dayInfo->setDay(this->calendar->selectedDate());
     });
 
+    calendar->setSelectedDate(QDate::currentDate());
+
 }
