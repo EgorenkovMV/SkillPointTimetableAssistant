@@ -31,6 +31,7 @@ private:
     Ui::LessonEditPopup *ui;
     std::shared_ptr<TimetableManager> ttmng;
     std::shared_ptr<Lesson> lesson;
+    QDate date;
     enum class PopupTask {
         Edit,
         Create

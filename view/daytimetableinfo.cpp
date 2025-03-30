@@ -70,7 +70,7 @@ void LessonTile::mouseDoubleClickEvent(QMouseEvent* event)
         event->ignore();
         return;
     }
-    emit clicked(lesson);
+    emit lessonClicked(lesson);
     event->accept();
 }
 
@@ -147,7 +147,7 @@ void DayTimetableInfo::setDay(const QDate &day)
             }
             int duration = (float)lesson->duration / minToPixRatio;
             LessonTile *tile = new LessonTile(nullptr, lesson);
-            connect(tile, &LessonTile::clicked, this, &DayTimetableInfo::editLesson);
+            connect(tile, &LessonTile::lessonClicked, this, &DayTimetableInfo::editLesson);
             mainLayout->addWidget(tile, offset, 1, duration, 1);
         }
     }
@@ -193,10 +193,7 @@ void DayTimetableInfo::editLesson(const std::shared_ptr<Lesson> &lesson)
     }
 
     lessonEdit = new LessonEditPopup(nullptr, ttmng, lesson);
-    connect(lessonEdit, &LessonEditPopup::lessonEdited, this, &DayTimetableInfo::deleteLessonEdit);
-    connect(lessonEdit, &LessonEditPopup::lessonCreated, this, &DayTimetableInfo::deleteLessonEdit);
-    connect(lessonEdit, &LessonEditPopup::canceled, this, &DayTimetableInfo::deleteLessonEdit);
-
+    setupLessonPopup();
 }
 
 void DayTimetableInfo::createLesson()
@@ -208,9 +205,7 @@ void DayTimetableInfo::createLesson()
     }
 
     lessonEdit = new LessonEditPopup(nullptr, ttmng, nullptr, currDay.value_or(QDate::currentDate()));
-    connect(lessonEdit, &LessonEditPopup::lessonEdited, this, &DayTimetableInfo::deleteLessonEdit);
-    connect(lessonEdit, &LessonEditPopup::lessonCreated, this, &DayTimetableInfo::deleteLessonEdit);
-    connect(lessonEdit, &LessonEditPopup::canceled, this, &DayTimetableInfo::deleteLessonEdit);
+    setupLessonPopup();
 }
 
 void DayTimetableInfo::deleteLessonEdit()
@@ -228,6 +223,13 @@ void DayTimetableInfo::mouseDoubleClickEvent(QMouseEvent* event)
 {
     createLesson();
     event->accept();
+}
+
+void DayTimetableInfo::setupLessonPopup()
+{
+    connect(lessonEdit, &LessonEditPopup::lessonEdited, this, &DayTimetableInfo::deleteLessonEdit);
+    connect(lessonEdit, &LessonEditPopup::lessonCreated, this, &DayTimetableInfo::deleteLessonEdit);
+    connect(lessonEdit, &LessonEditPopup::canceled, this, &DayTimetableInfo::deleteLessonEdit);
 }
 
 

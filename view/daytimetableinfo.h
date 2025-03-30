@@ -18,7 +18,7 @@ public:
     explicit LessonTile(QWidget *parent = nullptr, const std::shared_ptr<Lesson> &lesson = nullptr);
 
 signals:
-    void clicked(const std::shared_ptr<Lesson> &lesson);
+    void lessonClicked(const std::shared_ptr<Lesson> &lesson);
 
 private:
     std::shared_ptr<Lesson> lesson;
@@ -60,6 +60,7 @@ private:
 
     void buildWidget();    // call this only if startTime or finishTime has changed
     void mouseDoubleClickEvent(QMouseEvent* event) override;
+    void setupLessonPopup();
 
 
 };
