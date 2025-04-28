@@ -19,5 +19,8 @@ MainWidget::MainWidget(QWidget *parent)
 
 MainWidget::~MainWidget()
 {
+    ttmng->cleanupData();
+    ttmng->save();
     delete ui;
 }
+

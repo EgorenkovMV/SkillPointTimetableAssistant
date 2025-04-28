@@ -2,6 +2,8 @@
 #include <QLayoutItem>
 #include <QLabel>
 #include <QMouseEvent>
+#include "../constants.h"
+
 
 namespace {
 
@@ -38,7 +40,7 @@ LessonTile::LessonTile(QWidget *parent, const std::shared_ptr<Lesson> &lesson)
 
     if (!lesson) {
         setStyleSheet("LessonTile {\
-                       border-color: rgba(0, 0, 0, 100%);\
+                       border-color: rgba(0, 0, 0, 0%);\
                        border-style: solid;\
                        border-width: 1px; }");
         return;
@@ -83,10 +85,15 @@ DayTimetableInfo::DayTimetableInfo(QWidget *parent, const std::shared_ptr<Timeta
     buildWidget();
 }
 
+DayTimetableInfo::~DayTimetableInfo()
+{
+    // deleteLessonEdit();    // doesn't work & crashes on delete
+}
+
 void DayTimetableInfo::buildWidget()
 {
-    if (startTime > finishTime) {
-        std::swap(startTime, finishTime);
+    if (Constants::startTime > Constants::finishTime) {
+        qWarning("DayTimetableInfo::buildWidget: startTime > finishTime");
     }
 
 
@@ -97,12 +104,14 @@ void DayTimetableInfo::buildWidget()
     mainLayout->setContentsMargins(QMargins {11, 0, 11, 0});
 
     int rowCounter = 0;
-    for (int hour = startTime.hour(); hour < finishTime.hour(); ++hour) {
+    for (int hour = Constants::startTime.hour(); hour < Constants::finishTime.hour(); ++hour) {
         QFrame *line = new QFrame();
+
+        line->setStyleSheet("QFrame {color: rgba(50, 50, 50, 50%)}");
         line->setFrameShape(QFrame::HLine);
         line->setFrameShadow(QFrame::Plain);
         mainLayout->addWidget(line, rowCounter, 0, 1, -1);
-        mainLayout->addWidget(new QLabel(QString::number(hour) + ":00"), rowCounter + 1, 0, 1, 1);    // Qt::AlignHCenter | Qt::AlignVCenter
+        mainLayout->addWidget(new QLabel(QString::number(hour) + ":00"), rowCounter + 1, 0, 1, 1);
 
         rowCounter += 12;
     }
@@ -140,7 +149,7 @@ void DayTimetableInfo::setDay(const QDate &day)
     // Adding lesson tiles
     for (const std::shared_ptr<Lesson> &lesson : ttmng->lessons) {
         if (lesson->date.date() == currDay) {
-            int offset = (float)((lesson->date.time().hour() - startTime.hour()) * 60 + lesson->date.time().minute()) / minToPixRatio;
+            int offset = (float)((lesson->date.time().hour() - Constants::startTime.hour()) * 60 + lesson->date.time().minute()) / minToPixRatio;
             if (offset < 0) {
                 qWarning("DayTimetableInfo::setDay: lesson is outside of working hours");
                 continue;
@@ -156,7 +165,7 @@ void DayTimetableInfo::setDay(const QDate &day)
     int spacerStart = -1;
     int spacerEnd = -1;
     int row = 0;
-    for (row = 0; row < (finishTime.hour() - startTime.hour()) * 60 / minToPixRatio; ++row) {
+    for (row = 0; row < (Constants::finishTime.hour() - Constants::startTime.hour()) * 60 / minToPixRatio; ++row) {
         if (!mainLayout->itemAtPosition(row, 1)) {
             if (spacerStart == -1) {
                 spacerStart = row;
@@ -194,6 +203,8 @@ void DayTimetableInfo::editLesson(const std::shared_ptr<Lesson> &lesson)
 
     lessonEdit = new LessonEditPopup(nullptr, ttmng, lesson);
     setupLessonPopup();
+    lessonEdit->show();
+    lessonEdit->setFocus();
 }
 
 void DayTimetableInfo::createLesson()
@@ -206,6 +217,8 @@ void DayTimetableInfo::createLesson()
 
     lessonEdit = new LessonEditPopup(nullptr, ttmng, nullptr, currDay.value_or(QDate::currentDate()));
     setupLessonPopup();
+    lessonEdit->show();
+    lessonEdit->setFocus();
 }
 
 void DayTimetableInfo::deleteLessonEdit()
@@ -214,6 +227,7 @@ void DayTimetableInfo::deleteLessonEdit()
         setDay(currDay.value());
     }
 
+    if (!lessonEdit) return;
     lessonEdit->hide();
     lessonEdit->deleteLater();
     lessonEdit = nullptr;
@@ -229,6 +243,7 @@ void DayTimetableInfo::setupLessonPopup()
 {
     connect(lessonEdit, &LessonEditPopup::lessonEdited, this, &DayTimetableInfo::deleteLessonEdit);
     connect(lessonEdit, &LessonEditPopup::lessonCreated, this, &DayTimetableInfo::deleteLessonEdit);
+    connect(lessonEdit, &LessonEditPopup::lessonDeleted, this, &DayTimetableInfo::deleteLessonEdit);
     connect(lessonEdit, &LessonEditPopup::canceled, this, &DayTimetableInfo::deleteLessonEdit);
 }
 

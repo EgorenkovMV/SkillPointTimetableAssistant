@@ -12,8 +12,13 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/view)
+
+
 set(PROJECT_SOURCES
         main.cpp
+        constants.h
         model/student.h model/student.cpp
         model/lesson.h model/lesson.cpp
         model/timetablemanager.h model/timetablemanager.cpp
@@ -24,6 +29,7 @@ set(PROJECT_SOURCES
         view/timetablewidget.h view/timetablewidget.cpp
         view/daytimetableinfo.h view/daytimetableinfo.cpp
         view/lessoneditpopup.h view/lessoneditpopup.cpp view/lessoneditpopup.ui
+        view/partilist.h view/partilist.cpp
 )
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)

@@ -2,9 +2,10 @@
 #include "ui_studentinfo.h"
 #include <QCalendarWidget>
 
-StudentInfo::StudentInfo(QWidget *parent)
+StudentInfo::StudentInfo(QWidget *parent, std::shared_ptr<TimetableManager> ttmng)
     : QWidget(parent)
     , ui(new Ui::StudentInfo)
+    , ttmng(ttmng)
 {
     ui->setupUi(this);
 
@@ -89,7 +90,7 @@ void StudentInfo::setStudent(const std::shared_ptr<Student> &student)
     ui->le_name->setText(currStudent->name);
     ui->le_educationalPlan->setText(currStudent->educationalPlan);
     ui->le_educationalPlanProgress->setText(currStudent->educationalPlanProgress);
-    ui->sb_grossPayment->setValue(currStudent->paymentBalance());
+    ui->sb_grossPayment->setValue(ttmng->paymentBalance(currStudent));
 
     ui->tw_paymentHistory->clear();
     ui->tw_paymentHistory->setRowCount(currStudent->paymentsHistory.size());
@@ -197,8 +198,8 @@ void StudentInfo::stopEditingAndSave()
 
     if (currStudent) {
         if (ui->le_name->text() == currStudent->name) {
-            if (ui->sb_grossPayment->value() - currStudent->paymentBalance()) {
-                currStudent->addPayment(ui->sb_grossPayment->value() - currStudent->paymentBalance());
+            if (ui->sb_grossPayment->value() - ttmng->paymentBalance(currStudent)) {
+                currStudent->addPayment(ui->sb_grossPayment->value() - ttmng->paymentBalance(currStudent));
             }
             currStudent->educationalPlan = ui->le_educationalPlan->text();
             currStudent->educationalPlanProgress = ui->le_educationalPlanProgress->text();

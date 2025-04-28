@@ -124,7 +124,7 @@ StudentsList::StudentsList(QWidget *parent, std::shared_ptr<TimetableManager> tt
     scrollArea->setWidgetResizable(true);
 
     // Student info
-    si_studentInfo = new StudentInfo();
+    si_studentInfo = new StudentInfo(nullptr, ttmng);
     layout->addWidget(si_studentInfo);
 
     layout->setStretch(0, 1);
@@ -139,9 +139,7 @@ StudentsList::StudentsList(QWidget *parent, std::shared_ptr<TimetableManager> tt
 }
 
 StudentsList::~StudentsList()
-{
-    ttmng->save();
-}
+{}
 
 void StudentsList::updateList()
 {

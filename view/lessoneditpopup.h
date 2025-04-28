@@ -2,7 +2,9 @@
 #define LESSONEDITPOPUP_H
 
 #include <QWidget>
+#include <QListWidget>
 #include "../model/timetablemanager.h"
+
 
 namespace Ui {
 class LessonEditPopup;
@@ -22,10 +24,14 @@ public:
 signals:
     void lessonEdited(const std::shared_ptr<Lesson> &lesson);
     void lessonCreated(const std::shared_ptr<Lesson> &lesson);
+    void lessonDeleted(const std::shared_ptr<Lesson> &lesson);
     void canceled();
 
 private slots:
     void saveLesson();
+    void addParti(const QStringList &parti);
+    void addPartiButton();
+    void removeParti();
 
 private:
     Ui::LessonEditPopup *ui;
@@ -37,7 +43,11 @@ private:
         Create
     } task;
 
+    Lesson::
+    std::vector<std::shared_ptr<ParticipantInfo>> participants;
+
     void closeEvent(QCloseEvent *event) override;
+
 };
 
 #endif // LESSONEDITPOPUP_H

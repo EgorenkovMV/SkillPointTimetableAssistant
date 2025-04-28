@@ -5,7 +5,7 @@
 #include <QMessageBox>
 #include <QTimeEdit>
 #include <QSpinBox>
-#include "../model/student.h"
+#include "../model/timetablemanager.h"
 
 
 namespace Ui {
@@ -17,7 +17,7 @@ class StudentInfo : public QWidget
     Q_OBJECT
 
 public:
-    explicit StudentInfo(QWidget *parent = nullptr);
+    explicit StudentInfo(QWidget *parent = nullptr, std::shared_ptr<TimetableManager> ttmng = nullptr);
     ~StudentInfo();
     void setStudent(const std::shared_ptr<Student> &student = nullptr);
 
@@ -41,6 +41,7 @@ private slots:
 
 private:
     Ui::StudentInfo *ui;
+    std::shared_ptr<TimetableManager> ttmng;
     std::shared_ptr<Student> currStudent = nullptr;
     bool isEditable = false;
     QMessageBox *saveDialog = nullptr;

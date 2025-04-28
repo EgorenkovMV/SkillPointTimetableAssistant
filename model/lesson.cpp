@@ -81,5 +81,17 @@ Lesson Lesson::fromJson(const QJsonObject &json, const QMap<QString, std::shared
     return lesson;
 }
 
+std::shared_ptr<ParticipantInfo> Lesson::findParticipant(const std::shared_ptr<Student> &student)
+{
+    for (const std::shared_ptr<ParticipantInfo> &parti : participants) {
+        if (parti->student == student) {
+            return parti;
+        }
+    }
+
+    return nullptr;
+}
+
+
 
 

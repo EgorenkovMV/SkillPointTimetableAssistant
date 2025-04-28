@@ -34,6 +34,7 @@ class DayTimetableInfo : public QWidget
     Q_OBJECT
 public:
     explicit DayTimetableInfo(QWidget *parent = nullptr, const std::shared_ptr<TimetableManager> &ttmng = nullptr);
+    ~DayTimetableInfo();
 
 public slots:
     void setDay(const QDate &day);
@@ -51,9 +52,6 @@ private:
     int bottomPadding = 6;
 
     QGridLayout *mainLayout = nullptr;
-
-    QTime startTime {11, 00};
-    QTime finishTime {20, 00};
 
     LessonEditPopup *lessonEdit = nullptr;
 

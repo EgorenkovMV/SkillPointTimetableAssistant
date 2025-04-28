@@ -33,13 +33,14 @@ public:
     bool isArchived = false;
 
     Student(const QString &name);
-    Ruble paymentBalance() const;
+    Ruble totalPayments() const;
     void addPayment(Ruble payment, const QDateTime &date = QDateTime::currentDateTime());
     QJsonObject toJson() const;
     static Student fromJson(const QJsonObject &json);
+    void checkCachedPayments();
 
 private:
-    Ruble cachedBalance;
+    Ruble cachedBalance;    // sum of all payments
 
 };
 

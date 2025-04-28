@@ -27,7 +27,7 @@ Student::Student(const QString &name)
     , cachedBalance(0)
 {}
 
-Ruble Student::paymentBalance() const
+Ruble Student::totalPayments() const
 {
     return cachedBalance;
 }
@@ -88,6 +88,18 @@ Student Student::fromJson(const QJsonObject &json)
     }
 
     return student;
+}
+
+void Student::checkCachedPayments()
+{
+    Ruble paymentsSum = 0;
+    for (const Ruble &payment : paymentsHistory) {
+        paymentsSum += payment;
+    }
+
+    if (cachedBalance != paymentsSum) {
+        qWarning() << "Student::checkCachedPayments: cached payment does not match history: " << name;
+    }
 }
 
 

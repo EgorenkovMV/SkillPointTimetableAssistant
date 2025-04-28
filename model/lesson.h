@@ -30,15 +30,14 @@ public:
 class Lesson
 {
 public:
+    QDateTime date;
+    Minute duration;
     enum class Type
     {
         EnglishIndividual = 0,
         EnglishGroup,
-    };
+    } type;
 
-    QDateTime date;
-    Minute duration;
-    Type type;
     Ruble cost;
     std::vector<std::shared_ptr<ParticipantInfo>> participants;
     QString additionalInfo;
@@ -46,6 +45,7 @@ public:
     Lesson(const QDateTime &date = QDateTime::currentDateTime(), Minute duration = 0, Type type = Type::EnglishIndividual, Ruble cost = 0);
     QJsonObject toJson() const;
     static Lesson fromJson(const QJsonObject &json, const QMap<QString, std::shared_ptr<Student>> &students);
+    std::shared_ptr<ParticipantInfo> findParticipant(const std::shared_ptr<Student> &student);
 };
 
 #endif // LESSON_H

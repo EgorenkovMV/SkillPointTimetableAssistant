@@ -4,6 +4,7 @@
 #include <QCborValue>
 #include <QCborMap>
 #include <QFile>
+#include "../constants.h"
 
 namespace {
 QString saveFilename = "../../sampo.save";
@@ -95,7 +96,7 @@ bool TimetableManager::load(SaveFormat saveFormat)
         qWarning("TimetableManager::load: couldn't open save file.");
         return false;
     }
-
+ // todo
     QByteArray saveData = loadFile.readAll();
 
     QJsonDocument loadDoc(saveFormat == SaveFormat::Json
@@ -151,6 +152,47 @@ bool TimetableManager::addStudent(const std::shared_ptr<Student> &newStudent)
     students.insert(newStudent->name, newStudent);
     return true;
 }
+
+void TimetableManager::cleanupData()
+{
+    // Remove lessons outside the working hours in future
+    size_t lessonsBefore = lessons.size();
+    lessons.erase(remove_if(lessons.begin(), lessons.end(), [&] (const std::shared_ptr<Lesson> &lesson) {
+                      if ((lesson->date.time() < Constants::startTime or
+                           lesson->date.time().addSecs(lesson->duration * 60) > Constants::finishTime) and
+                          lesson->date.date() >= QDate::currentDate()) {
+                          return true;
+                      }
+                      return false;
+                  }), lessons.end());
+
+    if (lessonsBefore < lessons.size()) {
+        qWarning("TimetableManager::cleanupData: removed some lessons outside the working hours");
+    }
+
+    // check if cached payments match payment history
+    for (const std::shared_ptr<Student>& student : students) {
+        student->checkCachedPayments();
+    }
+}
+
+Ruble TimetableManager::paymentBalance(const std::shared_ptr<Student> &student)
+{
+    Ruble balance = student->totalPayments();
+    for (const std::shared_ptr<Lesson> &lesson : lessons) {
+        std::shared_ptr<ParticipantInfo> parti = lesson->findParticipant(student);
+        if (!parti) {
+            continue;
+        }
+        if (parti->outcome == ParticipantInfo::Outcome::Successful or
+            parti->outcome == ParticipantInfo::Outcome::CanceledNotRefunded) {
+            balance -= parti->individualCost;
+        }
+    }
+
+    return balance;
+}
+
 
 
 

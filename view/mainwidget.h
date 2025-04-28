@@ -22,5 +22,6 @@ public:
 private:
     Ui::MainWidget *ui;
     std::shared_ptr<TimetableManager> ttmng;
+
 };
 #endif // MAINWIDGET_H
