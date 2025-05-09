@@ -33,8 +33,6 @@ LessonTile::LessonTile(QWidget *parent, const std::shared_ptr<Lesson> &lesson)
     : QFrame{parent}
     , lesson(lesson)
 {
-
-
     setFrameStyle(QFrame::StyledPanel);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 
