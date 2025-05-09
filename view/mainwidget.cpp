@@ -11,6 +11,7 @@ MainWidget::MainWidget(QWidget *parent)
     ui->setupUi(this);
     ttmng = std::shared_ptr<TimetableManager> {new TimetableManager {}};
     ttmng->load();
+    ttmng->updateLessonsOutcome();
 
     ui->tabWidget->addTab(new TimetableWidget(this, ttmng), "Расписание");
     ui->tabWidget->addTab(new StudentsList(this, ttmng), "Ученики");

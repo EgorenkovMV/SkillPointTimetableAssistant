@@ -22,6 +22,8 @@ public:
     bool addStudent(const std::shared_ptr<Student> &newStudent);
     void cleanupData();
     Ruble paymentBalance(const std::shared_ptr<Student> &student);
+    void deleteLessonForGood(const std::shared_ptr<Lesson> &lesson);
+    void updateLessonsOutcome();
 
 };
 

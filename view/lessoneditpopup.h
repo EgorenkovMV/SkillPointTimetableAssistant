@@ -29,7 +29,7 @@ signals:
 
 private slots:
     void saveLesson();
-    void addParti(const QStringList &parti);
+    void addParti(const QStringList &partiList);
     void addPartiButton();
     void removeParti();
 
@@ -43,8 +43,9 @@ private:
         Create
     } task;
 
-    Lesson::
     std::vector<std::shared_ptr<ParticipantInfo>> participants;
+
+    void setPartiSideData(const std::shared_ptr<ParticipantInfo> &parti);
 
     void closeEvent(QCloseEvent *event) override;
 

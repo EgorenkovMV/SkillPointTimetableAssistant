@@ -6,9 +6,6 @@
 #include <QFile>
 #include "../constants.h"
 
-namespace {
-QString saveFilename = "../../sampo.save";
-}
 
 TimetableManager::TimetableManager()
 {
@@ -76,7 +73,7 @@ bool TimetableManager::save(SaveFormat saveFormat)
     json["lessons"] = jsonLessons;
 
 
-    QFile saveFile(saveFormat == SaveFormat::Json ? saveFilename + ".json" : saveFilename + ".dat");
+    QFile saveFile(saveFormat == SaveFormat::Json ? Constants::saveFilename + ".json" : Constants::saveFilename + ".dat");
 
     if (!saveFile.open(QIODevice::WriteOnly)) {
         qWarning("TimetableManager::save: couldn't open save file.");
@@ -90,13 +87,13 @@ bool TimetableManager::save(SaveFormat saveFormat)
 
 bool TimetableManager::load(SaveFormat saveFormat)
 {
-    QFile loadFile(saveFormat == SaveFormat::Json ? saveFilename + ".json" : saveFilename + ".dat");
+    QFile loadFile(saveFormat == SaveFormat::Json ? Constants::saveFilename + ".json" : Constants::saveFilename + ".dat");
 
     if (!loadFile.open(QIODevice::ReadOnly)) {
         qWarning("TimetableManager::load: couldn't open save file.");
         return false;
     }
- // todo
+
     QByteArray saveData = loadFile.readAll();
 
     QJsonDocument loadDoc(saveFormat == SaveFormat::Json
@@ -192,6 +189,33 @@ Ruble TimetableManager::paymentBalance(const std::shared_ptr<Student> &student)
 
     return balance;
 }
+
+void TimetableManager::deleteLessonForGood(const std::shared_ptr<Lesson> &lesson)
+{
+    for (const std::shared_ptr<ParticipantInfo> &parti : lesson->participants) {
+        if (parti->outcome == ParticipantInfo::Outcome::CanceledRefunded or
+            parti->outcome == ParticipantInfo::Outcome::NotFinishedYet) {
+            continue;
+        }
+        parti->student->addPayment(-1 * parti->individualCost, lesson->date);
+    }
+    lessons.erase(std::find(lessons.begin(), lessons.end(), lesson));
+}
+
+void TimetableManager::updateLessonsOutcome()
+{
+    for (const std::shared_ptr<Lesson> &lesson : lessons) {
+        if (lesson->date > QDateTime::currentDateTime()) {
+            continue;
+        }
+        for (const std::shared_ptr<ParticipantInfo> &parti : lesson->participants) {
+            if (parti->outcome == ParticipantInfo::Outcome::NotFinishedYet) {
+                parti->outcome = ParticipantInfo::Outcome::Successful;
+            }
+        }
+    }
+}
+
 
 
 

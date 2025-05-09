@@ -5,16 +5,6 @@
 #include <QDropEvent>
 
 
-class PartiListItem : public QListWidgetItem {
-    Q_OBJECT
-
-public:
-    explicit PartiListItem(QListWidget *parent = nullptr);
-
-};
-
-
-
 class PartiList : public QListWidget {
     Q_OBJECT
 

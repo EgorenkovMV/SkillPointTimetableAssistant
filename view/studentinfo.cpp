@@ -38,6 +38,7 @@ StudentInfo::StudentInfo(QWidget *parent, std::shared_ptr<TimetableManager> ttmn
 
     paymentDialogSpinBox = new QSpinBox();
     paymentDialogSpinBox->setMaximum(999999);
+    paymentDialogSpinBox->setMinimum(-999999);
     paymentDialogSpinBox->setSingleStep(50);
     paymentDialogSpinBox->setSuffix(" руб.");
     if (dialogLayout) {
@@ -146,7 +147,6 @@ void StudentInfo::startEditing()
     ui->pb_save->setDisabled(false);
     ui->pb_discard->setDisabled(false);
     ui->pb_addPayment->setDisabled(true);
-
 }
 
 void StudentInfo::saveClicked()

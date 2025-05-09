@@ -1,13 +1,5 @@
 #include "partilist.h"
 
-PartiListItem::PartiListItem(QListWidget *parent)
-    : QListWidgetItem(parent)
-{
-
-}
-
-
-
 PartiList::PartiList(QWidget *parent)
     : QListWidget(parent)
 { }

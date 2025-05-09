@@ -20,13 +20,25 @@ LessonEditPopup::LessonEditPopup(QWidget *parent,
         return;
     }
 
+    ui->te_time->setDisplayFormat("HH:mm");
+
     task = lesson ? PopupTask::Edit : PopupTask::Create;
     this->date = lesson ? lesson->date.date() : date;
 
     connect(ui->pb_accept, &QPushButton::clicked, this, &LessonEditPopup::saveLesson);
     connect(ui->pb_discard, &QPushButton::clicked, this, &LessonEditPopup::canceled);
-    connect(ui->pb_accept, &QPushButton::clicked, this, &LessonEditPopup::saveLesson);
-    connect(ui->pb_discard, &QPushButton::clicked, this, &LessonEditPopup::canceled);
+    connect(ui->pb_cancelRefund, &QPushButton::clicked, this, [this] () {
+        for (const std::shared_ptr<ParticipantInfo> &parti : this->lesson->participants) {
+            parti->outcome = ParticipantInfo::Outcome::CanceledRefunded;
+        }
+        saveLesson();
+    });
+    connect(ui->pb_cancelNotRefund, &QPushButton::clicked, this, [this] () {
+        for (const std::shared_ptr<ParticipantInfo> &parti : this->lesson->participants) {
+            parti->outcome = ParticipantInfo::Outcome::CanceledNotRefunded;
+        }
+        saveLesson();
+    });
     connect(ui->sb_cost, &QSpinBox::valueChanged, this, [this] (int value) {
         this->ui->sb_partiCost->setValue(value);
     });
@@ -46,12 +58,6 @@ LessonEditPopup::LessonEditPopup(QWidget *parent,
     ui->cb_partiOutcome->addItem("CanceledRefunded");
     ui->cb_partiOutcome->setCurrentIndex(0);
 
-    QMap<QString, std::shared_ptr<Student>>::const_iterator it = ttmng->students.constBegin();
-    while (it != ttmng->students.constEnd()) {
-        ui->lw_students->addItem(it.key());
-        ++it;
-    }
-
     ui->te_time->setMinimumTime(Constants::startTime);
     ui->te_time->setMaximumTime(Constants::finishTime);
     ui->te_time->setTime(Constants::startTime);
@@ -64,10 +70,21 @@ LessonEditPopup::LessonEditPopup(QWidget *parent,
         participants = this->lesson->participants;
         ui->te_time->setTime(this->lesson->date.time());
         ui->sb_cost->setValue(this->lesson->cost);
+        ui->sb_duration->setValue(this->lesson->duration);
 
         for (const std::shared_ptr<ParticipantInfo> &parti : this->lesson->participants) {
             ui->lw_parti->addItem(parti->student->name);
+            setPartiSideData(parti);
         }
+    }
+
+    for (auto const& student: ttmng->students) {
+        if (std::find_if(this->lesson->participants.begin(), this->lesson->participants.end(),
+                         [&] (const std::shared_ptr<ParticipantInfo> &parti) {return parti->student->name == student->name;})
+            != this->lesson->participants.end()) {
+            continue;
+        }
+        ui->lw_students->addItem(student->name);
     }
 }
 
@@ -100,20 +117,20 @@ void LessonEditPopup::saveLesson()
     }
 }
 
-void LessonEditPopup::addParti(const QStringList &parti)
+void LessonEditPopup::addParti(const QStringList &partiList)
 {
-    for (const QString &itemName : parti) {
-        std::shared_ptr<Student> student = *ttmng->students.find(itemName);
+    for (const QString &partiName : partiList) {
+        std::shared_ptr<Student> student = *ttmng->students.find(partiName);
         if (!student) {
             qWarning() << "LessonEditPopup::addParti: no student in ttmng";
             continue;
         }
         ParticipantInfo parti {student, ui->sb_partiCost->value(),
-                              static_cast<ParticipantInfo::Outcome>(ui->cb_partiOutcome->currentIndex())};
+                               static_cast<ParticipantInfo::Outcome>(ui->cb_partiOutcome->currentIndex())};
 
-        participants.push_back(std::make_shared<ParticipantInfo>(parti));
-        ui->lw_parti->findItems(itemName,
-            Qt::MatchExactly).at(0)->setToolTip(QString::number(ui->sb_partiCost->value()));
+        std::shared_ptr<ParticipantInfo> partiPtr = std::make_shared<ParticipantInfo>(parti);
+        participants.push_back(partiPtr);
+        setPartiSideData(partiPtr);
     }
 }
 
@@ -138,6 +155,14 @@ void LessonEditPopup::removeParti()
     }));
     ui->lw_students->addItems({ui->lw_parti->selectedItems().at(0)->text()});
     delete ui->lw_parti->selectedItems().at(0);
+}
+
+void LessonEditPopup::setPartiSideData(const std::shared_ptr<ParticipantInfo> &parti)
+{
+    QListWidgetItem *item = ui->lw_parti->findItems(parti->student->name, Qt::MatchExactly).at(0);
+    item->setToolTip(QString::number(parti->individualCost) + " руб. | " +
+                     Constants::outcomeEtoT.value(static_cast<int>(parti->outcome)));
+    item->setBackground(Constants::outcomeCM.value(static_cast<int>(parti->outcome)));
 }
 
 void LessonEditPopup::closeEvent(QCloseEvent *event)
