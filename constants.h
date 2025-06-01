@@ -11,7 +11,7 @@ namespace Constants {
     const QTime finishTime {20, 00};
 
     // Filename
-    const QString saveFilename = "../../sampo.save";
+    const QString saveFilename = "../../SkillPointTTAssistant.save";
 
     // Enum to text
     const QMap<int, QString> outcomeEtoT = {{0, "Ещё не прошёл"},    // NotFinishedYet
